@@ -2,9 +2,10 @@ use std::{collections::HashMap, str::FromStr};
 
 use anyhow::{anyhow, Ok, Result};
 use clap::{Args, Parser, Subcommand};
-use colored::Colorize;
+use colored::{Colorize};
 use mime::Mime;
 use reqwest::{header, Client, Response, Url};
+use syntect::{parsing::SyntaxSet, highlighting::{ThemeSet, Style}, easy::HighlightLines, util::{LinesWithEndings, as_24_bit_terminal_escaped}};
 
 /// Simple program to greet a person
 #[derive(Parser, Debug)]
@@ -98,10 +99,21 @@ fn print_headers(resp: &Response) {
 
 fn print_body(m: Option<Mime>, body: &String) {
     match m {
-        Some(v) if v == mime::APPLICATION_JSON => {
-            println!("{}", jsonxf::pretty_print(body).unwrap().cyan())
-        }
+        Some(v) if v == mime::APPLICATION_JSON => print_synctect(body, "json"),
+        Some(v) if v == mime::TEXT_HTML => print_synctect(body, "html"),
         _ => println!("{}", body),
+    }
+}
+
+fn print_synctect(s: &str, ext: &str) {
+    let ps = SyntaxSet::load_defaults_newlines();
+    let ts = ThemeSet::load_defaults();
+    let syntex = ps.find_syntax_by_extension(ext).unwrap();
+    let mut h = HighlightLines::new(syntex, &ts.themes["base16-ocean.light"]);
+    for line in LinesWithEndings::from(s) {
+        let ranges: Vec<(Style, &str)> = h.highlight_line(line, &ps).unwrap();
+        let escaped = as_24_bit_terminal_escaped(&ranges[..], true);
+        print!("{}", escaped);
     }
 }
 
