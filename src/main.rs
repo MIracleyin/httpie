@@ -1,10 +1,10 @@
-use std::{collections::HashMap, str::FromStr, usize::MIN};
+use std::{collections::HashMap, str::FromStr};
 
 use anyhow::{anyhow, Ok, Result};
 use clap::{Args, Parser, Subcommand};
 use colored::Colorize;
 use mime::Mime;
-use reqwest::{header, Client, Error, Response, Url};
+use reqwest::{header, Client, Response, Url};
 
 /// Simple program to greet a person
 #[derive(Parser, Debug)]
@@ -70,8 +70,7 @@ impl FromStr for KvPair {
 
 async fn get(client: Client, args: &Get) -> Result<()> {
     let resp = client.get(&args.url).send().await?;
-    print_resp(resp).await?;
-    Ok(())
+    Ok(print_resp(resp).await?)
 }
 
 async fn post(client: Client, args: &Post) -> Result<()> {
@@ -81,8 +80,7 @@ async fn post(client: Client, args: &Post) -> Result<()> {
     }
 
     let resp = client.post(&args.url).json(&body).send().await?;
-    print_resp(resp).await?;
-    Ok(())
+    Ok(print_resp(resp).await?)
 }
 
 fn print_status(resp: &Response) {
@@ -168,6 +166,5 @@ mod tests {
                 v: "".into(),
             }
         )
-
     }
 }
